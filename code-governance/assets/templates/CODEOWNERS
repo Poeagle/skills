@@ -1,0 +1,25 @@
+# CODEOWNERS — 代码所有权定义
+# 每行指定一个路径模式及其所有者
+# 详见: https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+
+# 默认所有者为团队维护者
+* @{{default_owner}}
+
+# 核心源码
+/src/core/ @{{core_team}}
+
+# API 层
+/src/api/ @{{api_team}}
+
+# CLI 层
+/src/cli/ @{{cli_team}}
+
+# 测试目录
+/test/ @{{qa_team}}
+
+# CI/CD 与基础设施
+/.github/ @{{infra_team}}
+
+# 文档
+/docs/ @{{docs_team}}
+/README.md @{{docs_team}}
