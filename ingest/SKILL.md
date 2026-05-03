@@ -232,10 +232,11 @@ last_updated: YYYY-MM-DD
 #### 流程
 
 1. **扫描路径**：读取 `raw/05-coderepo/` 下第一层的文件（不是子目录）。每个文件名作为 GitHub 仓库地址，内容是待处理的仓库 URL。
-2. **拉取代码**：读取文件内容获取远程 URL，用 `git clone` 拉取到临时目录。
-3. **获取仓库信息**：记录项目名称、主要语言、构建系统、git remote。
-4. **触发 code-design skill**：按 `code-design` 技能的逆向分析（Analyze）模式执行完整解构流程。可使用 Agent 工具并行探索多个核心组件。
-5. **输出到 wiki/code-design/**：产出物写入 `wiki/code-design/{仓库名}/` 目录，结构为：
+2. **拉取代码**：读取文件内容获取远程 URL，用 `git clone --depth 1` 拉取到 `~/sources/{仓库名}/`。如果该目录已存在，先询问用户是否重新拉取。
+3. **修改 URL 文件**：将 `raw/05-coderepo/{文件名}` 的内容改为本地路径 `~/sources/{仓库名}`，指向拉取后的代码目录。
+4. **获取仓库信息**：记录项目名称、主要语言、构建系统、git remote。
+5. **触发 code-design skill**：按 `code-design` 技能的逆向分析（Analyze）模式执行完整解构流程。可使用 Agent 工具并行探索多个核心组件。
+6. **输出到 wiki/code-design/**：产出物写入 `wiki/code-design/{仓库名}/` 目录，结构为：
    ```
    wiki/code-design/{仓库名}/
    ├── README.md
@@ -250,8 +251,7 @@ last_updated: YYYY-MM-DD
    └── 5.部署视图.md（可选）
    ```
 6. **更新 index.md**：在 Sources 或新分类下注册 `code-design/{仓库名}`。
-7. **更新 log.md**：追加操作日志。
-8. **清理**：删除临时拉取的代码目录。`raw/05-coderepo/` 下的 URL 文件保持不动。
+8. **更新 log.md**：追加操作日志。
 
 ## 冲突处理流程
 
