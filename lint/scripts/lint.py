@@ -65,6 +65,9 @@ def scan(vault):
         return re.sub(r'^(sources|entities|concepts|syntheses)/', '', re.sub(r'\.md$', '', wikipath))
 
     for f, name in all_files.items():
+        # code-design 页面用独立索引（纯文本仓库列表），不参与 wikilink 注册检查
+        if name.startswith("code-design/"):
+            continue
         basename = strip_category(name)
         if basename not in registered:
             result["unregistered_pages"].append(basename)
@@ -98,8 +101,10 @@ def scan(vault):
                 })
             links_from[target].append(f)
 
-    # 5. 孤儿页面
+    # 5. 孤儿页面（排除 code-design，其文档独立不参与双链网络）
     for f, name in all_files.items():
+        if name.startswith("code-design/"):
+            continue
         basename = strip_category(name)
         if len(links_from.get(basename, [])) == 0 and len(links_from.get(name.replace(".md", ""), [])) == 0:
             content = open(f, encoding="utf-8").read()
