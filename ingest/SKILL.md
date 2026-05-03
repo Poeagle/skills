@@ -15,10 +15,12 @@ user-invocable: true
 - `raw/02-papers/` — 论文和 PDF 文献
 - `raw/03-transcripts/` — 视频转录文案
 - `raw/04-weread/` — 微信读书划线笔记
+- `raw/05-coderepo/` — 代码仓库工作区（待解构的源码目录）
 - `raw/09-archive/` — **已处理文件的归档目录，禁止读取**
 - `wiki/sources/` — 资料摘要
 - `wiki/entities/` — 实体（人物、公司、工具、产品）
 - `wiki/concepts/` — 概念（框架、方法论、理论）
+- `wiki/code-design/` — 软件设计文档（基于 arc42 标准的仓库解构产出）
 - `raw/04-weread/` 🔒 — 微信读书同步的划线笔记（只读，不在 ingest 中处理，由 query 调用时按需读取）
 
 ## 触发逻辑
@@ -222,6 +224,33 @@ last_updated: YYYY-MM-DD
 2. **移动源文件**：将源文件移动到 `raw/09-archive/` 目录。
 
 **绝对禁止修改源文件内部的文字。**
+
+### 步骤 7：代码仓库解构（`/ingest code`）
+
+当用户执行 `/ingest code <路径>` 时，对 `raw/05-coderepo/` 下的代码仓库执行解构，而不是普通 ingest 流程。
+
+#### 流程
+
+1. **定位仓库**：确认路径在 `raw/05-coderepo/` 下。如果是远程 URL，先 git clone 到该目录。
+2. **获取仓库信息**：记录项目名称、主要语言、构建系统、git remote。
+3. **触发 code-design skill**：按 `code-design` 技能的逆向分析（Analyze）模式执行完整解构流程。可使用 Agent 工具并行探索多个核心组件。
+4. **输出到 wiki/code-design/**：产出物写入 `wiki/code-design/{仓库名}/` 目录，结构为：
+   ```
+   wiki/code-design/{仓库名}/
+   ├── README.md
+   ├── 1.架构概览.md
+   ├── 2.通信图.md
+   ├── 3.跨切面概念.md
+   ├── 4.组件详情/{组件名}/
+   │   ├── README.md
+   │   ├── 1.设计原理.md
+   │   ├── 2.架构.md
+   │   └── 3.实现步骤.md
+   └── 5.部署视图.md（可选）
+   ```
+5. **更新 index.md**：在 Sources 或新分类下注册 `code-design/{仓库名}`。
+6. **更新 log.md**：追加操作日志。
+7. **源文件不移入归档**：代码仓库的源文件保留在 `raw/05-coderepo/`，不移动。因为代码仓库会持续更新，未来可能需要重新解构。
 
 ## 冲突处理流程
 

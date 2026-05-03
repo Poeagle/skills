@@ -61,8 +61,10 @@ llm-wiki/
 │   ├── 02-papers/         # 论文 PDF
 │   ├── 03-transcripts/    # 视频/播客转录
 │   ├── 04-weread/         # 微信读书划线笔记（自动同步）
+│   ├── 05-coderepo/       # 代码仓库工作区（待解构的源码目录）
 │   └── 09-archive/        # 已处理文件归档（仅追加，不读取）
 ├── wiki/                  # 知识编译输出层
+│   ├── code-design/       # 软件设计文档（arc42 标准仓库解构产出）
 │   ├── sources/           # 来源摘要
 │   ├── entities/          # 实体
 │   ├── concepts/          # 概念
