@@ -1,0 +1,145 @@
+#!/usr/bin/env python3
+"""Lint: 知识库健康扫描——纯机械操作，零 AI"""
+
+import os, re, glob, json
+from collections import defaultdict
+
+def find_vault_root():
+    cwd = os.getcwd()
+    for _ in range(10):
+        if os.path.isfile(os.path.join(cwd, "wiki", "index.md")):
+            return cwd
+        parent = os.path.dirname(cwd)
+        if parent == cwd:
+            break
+        cwd = parent
+    return os.getcwd()
+
+def scan(vault):
+    result = {
+        "dead_links": [],
+        "orphan_pages": [],
+        "unregistered_pages": [],
+        "indexed_but_missing": [],
+        "knowledge_conflicts": [],
+        "pending_files": 0,
+        "stats": {}
+    }
+
+    os.chdir(vault)
+    wiki_dir = os.path.join(vault, "wiki")
+
+    # 1. 收集所有 wiki 文件（排除 index.md 和 log.md）
+    all_files = {}
+    for f in glob.glob("wiki/**/*.md", recursive=True):
+        name = os.path.relpath(f, "wiki")
+        if name in ("index.md", "log.md"):
+            continue
+        all_files[f] = name
+
+    # 2. 读 index.md 提取已注册的 [[链接]]
+    registered = set()
+    index_path = os.path.join(wiki_dir, "index.md")
+    if os.path.isfile(index_path):
+        index_content = open(index_path, "r", encoding="utf-8").read()
+        for m in re.finditer(r'\[\[([^\]|#^]+)', index_content):
+            registered.add(m.group(1).strip())
+
+    # 3. 索引一致性：已注册但文件不存在
+    for name in registered:
+        candidates = [
+            f"wiki/{name}.md",
+            f"wiki/sources/{name}.md",
+            f"wiki/entities/{name}.md",
+            f"wiki/concepts/{name}.md",
+            f"wiki/syntheses/{name}.md",
+        ]
+        found = any(os.path.isfile(c) for c in candidates)
+        if not found:
+            result["indexed_but_missing"].append(name)
+
+    # 文件存在但未在 index.md 注册
+    # index.md 中的 [[摘要-xxx]] 不含 sources/ 前缀，需要去掉分类前缀再比较
+    def strip_category(wikipath):
+        """wiki/sources/摘要-xxx → 摘要-xxx"""
+        return re.sub(r'^(sources|entities|concepts|syntheses)/', '', re.sub(r'\.md$', '', wikipath))
+
+    for f, name in all_files.items():
+        basename = strip_category(name)
+        if basename not in registered:
+            result["unregistered_pages"].append(basename)
+
+    # 4. 死链检测 + 引用统计
+    links_from = defaultdict(list)
+
+    for f in all_files:
+        content = open(f, "r", encoding="utf-8").read()
+        seen = set()
+        for m in re.finditer(r'\[\[([^\]|#^]+)', content):
+            target = m.group(1).strip()
+            if target in seen:
+                continue
+            seen.add(target)
+            target_candidates = [
+                f"wiki/{target}.md",
+                f"wiki/sources/{target}.md",
+                f"wiki/entities/{target}.md",
+                f"wiki/concepts/{target}.md",
+                f"wiki/syntheses/{target}.md",
+            ]
+            raw_candidate = target if target.endswith(".md") else target + ".md"
+            target_candidates.append(raw_candidate)
+
+            found = any(os.path.isfile(c) for c in target_candidates)
+            if not found:
+                result["dead_links"].append({
+                    "source": f,
+                    "target": f"[[{target}]]"
+                })
+            links_from[target].append(f)
+
+    # 5. 孤儿页面
+    for f, name in all_files.items():
+        basename = strip_category(name)
+        if len(links_from.get(basename, [])) == 0 and len(links_from.get(name.replace(".md", ""), [])) == 0:
+            content = open(f, encoding="utf-8").read()
+            has_outgoing = bool(re.search(r'\[\[([^\]|#^]+)', content))
+            result["orphan_pages"].append({
+                "page": f,
+                "has_outgoing_links": has_outgoing
+            })
+
+    # 6. 知识冲突
+    for f in all_files:
+        content = open(f, encoding="utf-8").read()
+        if "知识冲突" in content:
+            result["knowledge_conflicts"].append(f)
+
+    # 7. 收件箱积压
+    raw_count = 0
+    raw_path = os.path.join(vault, "raw")
+    if os.path.isdir(raw_path):
+        for root, dirs, files in os.walk(raw_path):
+            dirs[:] = [d for d in dirs if d not in ("09-archive", "04-weread")]
+            raw_count += len([f for f in files if f.endswith(".md")])
+    result["pending_files"] = raw_count
+
+    # 8. 统计
+    total_pages = len(all_files)
+    total_links = sum(len(v) for v in links_from.values())
+    result["stats"] = {
+        "total_pages": total_pages,
+        "total_links": total_links,
+        "dead_link_count": len(result["dead_links"]),
+        "orphan_count": len(result["orphan_pages"]),
+        "unregistered_count": len(result["unregistered_pages"]),
+        "missing_count": len(result["indexed_but_missing"]),
+        "conflict_count": len(result["knowledge_conflicts"]),
+    }
+
+    return result
+
+if __name__ == "__main__":
+    vault = find_vault_root()
+    result = scan(vault)
+    print(json.dumps(result, indent=2, ensure_ascii=False))
