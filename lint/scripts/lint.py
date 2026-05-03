@@ -124,7 +124,71 @@ def scan(vault):
             raw_count += len([f for f in files if f.endswith(".md")])
     result["pending_files"] = raw_count
 
-    # 8. 统计
+    # 8. code-design 完整性检查
+    REQUIRED_FILES = ["README.md", "1.设计原理.md", "2.架构.md", "3.实现步骤.md"]
+
+    REQUIRED_HEADINGS = {
+        "README.md":        ["职责", "子模块清单", "输入", "输出", "依赖", "被依赖"],
+        "1.设计原理.md":     ["问题背景", "边界范围"],
+        "2.架构.md":         ["文件清单", "核心接口与类型", "模块关系图", "核心数据流"],
+        "3.实现步骤.md":     ["总体流程", "详细拆解", "关键分支", "调用关系"],
+    }
+    # 允许"设计思路"/"架构决策记录"/"架构决策"作为"问题背景"的互补标题
+    ALT_DESIGN_HEADINGS = ["设计思路", "架构决策记录", "架构决策"]
+
+    code_design_report = {"repos": []}
+
+    code_design_base = os.path.join(wiki_dir, "code-design")
+    if os.path.isdir(code_design_base):
+        for repo in sorted(os.listdir(code_design_base)):
+            repo_path = os.path.join(code_design_base, repo)
+            if not os.path.isdir(repo_path) or repo.startswith("."):
+                continue
+            components_dir = os.path.join(repo_path, "4.组件详情")
+            if not os.path.isdir(components_dir):
+                continue
+
+            repo_report = {"repo": repo, "total_components": 0, "passed": 0, "failed": 0, "defects": []}
+
+            for comp in sorted(os.listdir(components_dir)):
+                comp_path = os.path.join(components_dir, comp)
+                if not os.path.isdir(comp_path):
+                    continue
+                repo_report["total_components"] += 1
+                comp_defects = []
+
+                # 检查文件完整性
+                for rf in REQUIRED_FILES:
+                    if not os.path.isfile(os.path.join(comp_path, rf)):
+                        comp_defects.append(f"缺失文件 {rf}")
+
+                # 检查子标题完整性
+                for rf, headings in REQUIRED_HEADINGS.items():
+                    filepath = os.path.join(comp_path, rf)
+                    if not os.path.isfile(filepath):
+                        continue
+                    content = open(filepath, "r", encoding="utf-8").read()
+                    for h in headings:
+                        # 对 1.设计原理.md 的特殊处理
+                        if rf == "1.设计原理.md" and h == "问题背景":
+                            alt_found = any(f"## {alt}" in content for alt in ALT_DESIGN_HEADINGS)
+                            if "## 问题背景" not in content and not alt_found:
+                                comp_defects.append(f"{rf}: 缺失子标题「问题背景」（或「设计思路」「架构决策记录」「架构决策」）")
+                            continue
+                        if f"## {h}" not in content:
+                            comp_defects.append(f"{rf}: 缺失子标题「{h}」")
+
+                if comp_defects:
+                    repo_report["failed"] += 1
+                    repo_report["defects"].append({"component": comp, "issues": comp_defects})
+                else:
+                    repo_report["passed"] += 1
+
+            code_design_report["repos"].append(repo_report)
+
+    result["code_design"] = code_design_report
+
+    # 9. 统计
     total_pages = len(all_files)
     total_links = sum(len(v) for v in links_from.values())
     result["stats"] = {
