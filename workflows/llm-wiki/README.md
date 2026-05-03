@@ -35,6 +35,8 @@
 | Obsidian | 知识库前端（可视化浏览、编辑、图谱） |
 | Obsidian Local REST API 插件 | 允许外部工具通过 HTTP 访问 vault |
 | Obsidian Excalidraw 插件 | 在 Obsidian 中查看/编辑 Excalidraw 图表 |
+| Obsidian Web Clipper（浏览器扩展） | 将网页剪藏为 markdown 存入 raw/01-articles/ |
+| Bilibili Obsidian Clipper（浏览器扩展） | 将 B 站视频字幕/笔记直接存入 raw/03-transcripts/ |
 
 ## 使用方法
 
