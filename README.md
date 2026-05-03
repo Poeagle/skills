@@ -19,6 +19,7 @@ git clone git@github.com:Poeagle/skills.git ~/.claude/skills
 | 命令 | 类别 | 功能 |
 |------|------|------|
 | `ingest` | Wiki 知识管理 | 将 raw/ 源文件编译到 wiki/（来源摘要、实体、概念），更新索引后归档 |
+| `sc` | 通用工具 | 创建、优化和评估 skill 的元技能：采访需求→写草稿→跑测试→对比benchmark→迭代 |
 | `query` | Wiki 知识管理 | 知识库检索与综合回答，双链引用标注来源 |
 | `lint` | Wiki 知识管理 | 健康扫描：死链检测、孤儿页面、未同步索引、知识冲突 |
 | `obsidian-cli` | Obsidian 增强 | 通过 CLI 与运行中的 Obsidian 交互（搜索、创建、管理笔记） |
