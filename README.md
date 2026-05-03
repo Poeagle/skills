@@ -19,6 +19,7 @@ git clone git@github.com:Poeagle/skills.git ~/.claude/skills
 | 命令 | 类别 | 功能 |
 |------|------|------|
 | `code-design` | 通用工具 | 将代码仓库解构为 arc42 标准设计文档，或从零搭建输出完整设计规格 |
+| `code-governance` | 通用工具 | Agent-first 仓库治理：初始化治理结构、深度审计健康度、约束 agent 代码生成。支持多 agent 平台（Claude Code/Cursor/Copilot）符号链接共享单文件治理 |
 | `ingest` | Wiki 知识管理 | 将 raw/ 源文件编译到 wiki/（来源摘要、实体、概念），更新索引后归档 |
 | `sc` | 通用工具 | 创建、优化和评估 skill 的元技能：采访需求→写草稿→跑测试→对比benchmark→迭代 |
 | `query` | Wiki 知识管理 | 知识库检索与综合回答，双链引用标注来源 |
