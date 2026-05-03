@@ -28,6 +28,7 @@ git clone git@github.com:Poeagle/skills.git ~/.claude/skills
 | `excalidraw-diagram` | 可视化 | 生成 Excalidraw 图形（Obsidian/标准/动画三种输出） |
 | `mermaid-visualizer` | 可视化 | 生成专业 Mermaid 图表 |
 | `defuddle` | 通用工具 | 从网页提取纯净 Markdown |
+| `karpathy-guidelines` | 通用工具 | Karpathy 编码行为准则：避免过度设计、精准修改、目标驱动 |
 | `notion` | 通用工具 | Notion API 页面和数据库管理 |
 
 ## 维护
@@ -49,3 +50,4 @@ rm -rf ~/.claude/skills/<name>
 
 - [kepano/obsidian-skills](https://github.com/kepano/obsidian-skills) — defuddle, obsidian-cli, obsidian-markdown, obsidian-bases
 - [axtonliu/axton-obsidian-visual-skills](https://github.com/axtonliu/axton-obsidian-visual-skills) — excalidraw-diagram, mermaid-visualizer, obsidian-canvas-creator
+- [karpathy-skills](https://github.com/forrestchang/andrej-karpathy-skills) — karpathy-guidelines
