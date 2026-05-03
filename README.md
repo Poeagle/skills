@@ -1,6 +1,6 @@
-# Skills
+# Skills & Workflows
 
-个人 Claude Code / Claw Code 技能集合，托管在 `~/.claude/skills/`。
+Claude Code / Claw Code 技能与工作流集合，托管在 `~/.claude/skills/`。
 
 ```bash
 git clone git@github.com:Poeagle/skills.git ~/.claude/skills
