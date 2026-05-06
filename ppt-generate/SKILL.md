@@ -1,5 +1,5 @@
 ---
-name: axi-front-design
+name: ppt-generate
 description: >
   以 HTML 为媒介产出高保真设计稿（落地页、幻灯片、交互原型、动画、设计系统、信息图、移动端 mockup 等）。
   扮演专业设计师而非通用前端工程师，强调先问后做、引用既有设计系统、给出多版本变体、规避 AI 风格俗套。
