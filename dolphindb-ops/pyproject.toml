@@ -1,0 +1,24 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "dolphindb-ops-mcp"
+version = "0.1.0"
+description = "DolphinDB 运维 MCP server (skill 包，可装到任意 MCP-aware agent)"
+requires-python = ">=3.10"
+dependencies = [
+    "mcp>=1.0",
+    "pyyaml>=6.0",
+    "dolphindb>=3.0",
+    "asyncssh>=2.14",
+    "httpx>=0.25",
+]
+
+[project.scripts]
+# pip install 后可直接 `dolphindb-ops-mcp` 启动
+dolphindb-ops-mcp = "mcp_server.server:run"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["mcp_server*"]

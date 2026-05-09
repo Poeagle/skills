@@ -1,0 +1,106 @@
+# dolphindb-ops MCP server 配置示例
+# 复制为 mcp-config.yaml 并填入真实值（mcp-config.yaml 已在 .gitignore）
+#
+# 只需写 SSH 登录信息 + 集群凭证 + 每个集群在各服务器上的部署路径。
+# 节点拓扑和具体路径由 MCP server 启动时自动发现。
+
+skill_dir: ./
+
+# ── 集群定义 ──────────────────────────────────────────────────
+# mode: cluster | single （必填）
+# username / password: DolphinDB 登录凭证
+# ddb_home: 每个服务器上 dolphindb 可执行文件所在的 server/ 目录
+clusters:
+  # ====== 集群模式示例 ======
+  my-cluster:
+    mode: cluster
+    username: admin
+    password: "123456"
+    ddb_home:
+      server-1: /hdd/hdd8/ymchen/ddbs/my-cluster/server
+      server-2: /hdd/hdd8/ymchen/ddbs/my-cluster/server
+      server-3: /ssd/ssd1/ymchen/ddbs/my-cluster/server   # 不同服务器路径可能不同
+
+  # ====== 单机模式示例 ======
+  # my-single:
+  #   mode: single
+  #   username: admin
+  #   password: "123456"
+  #   ddb_home:
+  #     server-1: /hdd/hdd8/ymchen/ddbs/my-single/server
+
+# ── SSH 目标主机 ───────────────────────────────────────────────
+servers:
+  server-1:
+    host: 192.168.100.43
+    ssh_user: ymchen
+  server-2:
+    host: 192.168.100.44
+    ssh_user: ymchen
+  server-3:
+    host: 192.168.100.45
+    ssh_user: ymchen
+
+# SSH 默认参数
+ssh:
+  user: ymchen
+  port: 22
+
+# call_api 默认 base_url
+backend:
+  base_url: http://192.168.100.43:7900
+
+# 工具行为参数
+limits:
+  ddb_result_max_rows: 200
+  shell_output_max_chars: 5000
+  shell_output_max_lines: 100
+
+# ── 远程公开服务模式（多租户）─────────────────────────────────
+# 默认 enabled=false，走 stdio（backend 同机部署，零鉴权）。
+# enabled=true 时启动 HTTP 服务，外部 agent 可凭 token 接入。
+# 启动命令：dolphindb-ops-mcp serve --transport http
+# 或直接读 service.transport=http 自动切换。
+service:
+  enabled: false
+  transport: stdio        # stdio | http
+  host: 0.0.0.0
+  port: 7902
+  # http 模式下空闲连接回收（秒）。长对话/长巡检场景可调大，默认 1800
+  session_idle_timeout: 1800
+  # audit_log: /var/log/dolphindb-ops/audit.jsonl   # 不写则不审计
+
+# ── 多租户 token 表（仅 service.enabled=true 时生效）────────────
+# 每个 token 一组权限：可见集群、是否能跑写操作、是否能调 callApi
+# clusters: ["*"] 表示对所有集群可见
+tokens: []
+# - token: "team-a-replace-with-32-char-secret"
+#   name: team-a
+#   clusters: [my-cluster]
+#   can_operate: false        # false = 写操作强制返 operation_suggestion
+#   can_call_api: false
+# - token: "ops-replace-with-32-char-secret"
+#   name: ops-team
+#   clusters: ["*"]
+#   can_operate: true
+#   can_call_api: true
+
+# ── callApi 服务账号 ───────────────────────────────────────────
+# 当某 token can_call_api=true 时，MCP 用此 JWT 调 backend API
+call_api:
+  service_account_jwt: ""
+
+# ── 操作类 action 行为（recoverable / irreversible）─────────────────
+# false = MCP 永远返回 operation_suggestion，让用户手动执行（默认）
+# true  = LLM 传 __confirm__=true 时 MCP 直接执行（运维代理模式）
+agent_can_operate: false
+
+# 当 MCP 返回 operation_suggestion 时附带的元信息
+operation_suggestion:
+  execution_methods:
+    - "推荐：dolphindb_manager 平台 UI → 集群管理 → 节点 → DolphinDB Console，粘贴 call_expression"
+    - "或：DolphinDB GUI 客户端连接集群 controller，admin 登录后粘贴"
+    - "或：dolphindb -localSite ... -mode controller -i，粘贴"
+  support_advisory: |
+    执行前建议先与 DolphinDB 技术支持沟通确认（特别是 irreversible 级别的操作）。
+    https://www.dolphindb.com 提交工单，或邮件 support@dolphindb.com

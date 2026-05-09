@@ -1,0 +1,3 @@
+# 真实配置（含密码）不入库；仓库只放 mcp-config.yaml.example
+mcp-config.yaml
+*.egg-info/
