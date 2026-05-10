@@ -95,9 +95,13 @@ def scan(vault):
 
             found = any(os.path.isfile(c) for c in target_candidates)
             if not found:
+                # 将长路径转为 wiki 页面名（wiki/sources/摘要-xxx → 摘要-xxx）
+                page_name = strip_category(f.replace("wiki/", "", 1))
                 result["dead_links"].append({
                     "source": f,
-                    "target": f"[[{target}]]"
+                    "wikilink": f"[[{target}]]",
+                    "source_page": page_name,
+                    "target_name": target
                 })
             links_from[target].append(f)
 
@@ -122,12 +126,19 @@ def scan(vault):
 
     # 7. 收件箱积压
     raw_count = 0
+    raw_files = []
     raw_path = os.path.join(vault, "raw")
     if os.path.isdir(raw_path):
         for root, dirs, files in os.walk(raw_path):
             dirs[:] = [d for d in dirs if d not in ("09-archive", "04-weread")]
-            raw_count += len([f for f in files if f.endswith(".md")])
+            for f in files:
+                if f.endswith(".md"):
+                    raw_count += 1
+                    # 输出相对于 vault 的路径（不含 vault 前缀）
+                    rel_path = os.path.relpath(os.path.join(root, f), vault)
+                    raw_files.append(rel_path)
     result["pending_files"] = raw_count
+    result["pending_file_list"] = sorted(raw_files)
 
     # 8. code-design 完整性检查
     REQUIRED_FILES = ["README.md", "1.设计原理.md", "2.架构.md", "3.实现步骤.md"]
@@ -140,6 +151,9 @@ def scan(vault):
     }
     # 允许"设计思路"/"架构决策记录"/"架构决策"作为"问题背景"的替代标题（兼容旧文档）
     ALT_DESIGN_HEADINGS = ["设计思路", "架构决策记录", "架构决策"]
+
+    # 占位符关键词，用于内容质量检查
+    PLACEHOLDER_PATTERNS = ["待补充", "TODO", "FIXME", "待补充。", "待补充。"]
 
     code_design_report = {"repos": []}
 
@@ -165,23 +179,43 @@ def scan(vault):
                 # 检查文件完整性
                 for rf in REQUIRED_FILES:
                     if not os.path.isfile(os.path.join(comp_path, rf)):
-                        comp_defects.append(f"缺失文件 {rf}")
+                        comp_defects.append(f"[ERROR] 缺失文件 {rf}")
 
-                # 检查子标题完整性
+                # 检查子标题完整性 + 内容质量
                 for rf, headings in REQUIRED_HEADINGS.items():
                     filepath = os.path.join(comp_path, rf)
                     if not os.path.isfile(filepath):
                         continue
                     content = open(filepath, "r", encoding="utf-8").read()
+
+                    # 检查子标题是否存在
                     for h in headings:
                         # 对 1.设计原理.md 的特殊处理
                         if rf == "1.设计原理.md" and h == "问题背景":
                             alt_found = any(f"## {alt}" in content for alt in ALT_DESIGN_HEADINGS)
                             if "## 问题背景" not in content and not alt_found:
-                                comp_defects.append(f"{rf}: 缺失子标题「问题背景」（或「设计思路」「架构决策记录」「架构决策」）")
+                                comp_defects.append(f"[WARN] {rf}: 缺失子标题「问题背景」（或「设计思路」「架构决策记录」「架构决策」）")
                             continue
                         if f"## {h}" not in content:
-                            comp_defects.append(f"{rf}: 缺失子标题「{h}」")
+                            comp_defects.append(f"[WARN] {rf}: 缺失子标题「{h}」")
+
+                    # 检查子标题下是否为空或仅含占位符
+                    for h in headings:
+                        marker = f"## {h}"
+                        if marker not in content:
+                            continue
+                        # 提取子标题后的内容直到下一个 ## 或文件末尾
+                        rest = content.split(marker, 1)[1]
+                        section_content = rest.split("\n## ")[0] if "\n## " in rest else rest
+                        section_text = section_content.strip()
+                        # 检查是否为空或只有占位符
+                        if not section_text:
+                            comp_defects.append(f"[WARN] {rf}: 子标题「{h}」下内容为空")
+                        else:
+                            for placeholder in PLACEHOLDER_PATTERNS:
+                                if placeholder in section_text:
+                                    comp_defects.append(f"[WARN] {rf}: 子标题「{h}」下包含占位符「{placeholder}」")
+                                    break
 
                 if comp_defects:
                     repo_report["failed"] += 1
