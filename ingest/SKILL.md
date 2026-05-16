@@ -69,7 +69,18 @@ user-invocable: true
 ### 步骤 1：读取源文件
 
 - **如果是 `.md` 文件**：使用读取工具完整读取内容。
-- **如果是 `.pdf` 文件**：使用读取工具尝试提取文本。如果无法提取或内容为空，改为记录文件元信息（文件名、页数）在 sources 页面中。
+- **如果是 `.pdf 文件**`：使用读取工具尝试提取文本。如果无法提取或内容为空，改为记录文件元信息（文件名、页数）在 sources 页面中。
+
+#### 步骤 1b：长文件采样策略（文件 > 500 行或 > 20k 字时启用）
+
+对于超长文件（如 4 小时访谈转录、数百页 PDF），完整逐行读取不现实。改用采样策略：
+
+1. **先读头部**：简介、大纲、OUTLINE 目录——定位核心章节
+2. **跳读关键章节**：根据大纲选择性阅读内容最密集的部分
+3. **略过冗余**：重复性对话、字幕时间戳、格式性内容可跳过
+4. **标注**：在 source/synthesis 中标注"基于选择性阅读，可能遗漏部分细节"
+
+> 为什么：超长文件的完整读取消耗大量 token，且大量行是低信息密度的字幕格式。聚焦高密度章节效率更高。
 
 ### 步骤 2：提炼核心并翻译
 
@@ -80,7 +91,20 @@ user-invocable: true
 
 如果是非中文内容，则翻译成中文。
 
-### 步骤 3：创建来源摘要
+### 步骤 2.5：输出格式判定
+
+根据源材料性质和用户意图，选择输出路径：
+
+| 条件 | 输出路径 | 产出物 |
+|------|---------|--------|
+| 源材料是**理论框架/方法论文档/技术概念**，或用户未指定格式 | **知识网络化**（默认） | source + entity/concept |
+| 源材料是**单次访谈/事件/叙事型文章**、用户明确说"总结"/"综述"、或内容偏观点叙事而非知识体系 | **综述模式** | 仅 synthesis，跳过 entity/concept |
+
+判定后向用户展示规划（隐式触发时）或直接执行（主动命令时）。
+
+### 步骤 3：创建来源摘要（知识网络化路径）
+
+如果输出格式判定为"综述模式"，直接跳到步骤 4.5（创建综述）。
 
 在 `wiki/sources/` 创建 Markdown 文件：
 
@@ -190,6 +214,18 @@ last_updated: YYYY-MM-DD
 - 个人背景（"前华尔街从业者"、"多年修行经验"）
 聚焦内容本身，不评价格式和渠道。
 
+### 步骤 4.5：创建综述（综述模式路径）
+
+当步骤 2.5 判定为"综述模式"时，跳过步骤 3-4，在此步骤创建 synthesis 页面：
+
+**输出目录：** `wiki/syntheses/`
+
+**文件名：** kebab-case，基于主题描述，例如 `AI一线观察-姚顺宇访谈.md`
+
+**模板：** 按照 CLAUDE.md 中 Syntheses 页面模板创建，包含完整的 frontmatter + 正文 + 关联连接。
+
+**完成后：** 跳转到步骤 5（更新全局注册表），标签分类勾选 Syntheses 而非 Sources。
+
 ### 步骤 5：更新全局注册表
 
 **更新 `wiki/index.md`：**
@@ -203,6 +239,60 @@ last_updated: YYYY-MM-DD
 - **冲突**: 无（或: 冲突 [[ConflictingPage]], 已暂停等待决策）
 ```
 
+### 步骤 5.2：质量自检
+
+对本次新增/修改的页面执行逐项检查（不检查未涉及的文件）：
+
+```
+## 自检清单
+- [ ] 所有新增页面的 frontmatter 完整（title/type/tags/sources/last_updated）
+- [ ] sources 字段指向 raw/ 相对路径（不含 `wiki/` 前缀，也不含绝对路径）
+- [ ] 页面包含 ## 关联连接 区域
+- [ ] 新增页面至少有 1 个出链（指向已有页面），避免引入孤岛
+- [ ] 所有 [[链接]] 指向的页面存在（左移死链检查）
+```
+
+**发现死链的处理：**
+- 目标概念存在但名称拼写有差异 → 修正链接
+- 目标概念应该存在但还没创建 → 一键创建 stub 页面（含 frontmatter + 定义 + 关联连接），标注 `source: [本ingest源文件]`
+- 单纯的笔误 → 修正
+
+### 步骤 5.4：自动 lint 验证
+
+运行 lint 脚本确认本次变更未引入新问题：
+
+```
+python3 ~/.claude/skills/lint/scripts/lint.py
+```
+
+检查要点：
+- 新仓库的 `code_design` 检查：`passed/total_components` 是否等于 1
+- 死链计数：不得高于 ingest 前的基线（首次扫描无基线则确保新增页面零死链）
+- 孤岛计数：检查是否有页面无入链（`has_outgoing_links: false`）
+- 如有 `failed > 0`，逐条修复后再继续
+
+> 为什么：lint 是健康防线，应该每次 ingest 后自动触发，而不是等用户想起来才手动运行。
+
+#### 死链修复
+
+lint 输出中 `dead_links` 列出的每个 `[[wikilink]]` 目标页面不存在：
+- 目标概念存在但名称拼写有差异 → 修正链接
+- 目标概念应该存在但还没创建 → 创建 stub 页面（含 frontmatter + 定义 + 关联连接），标注 `source: [本ingest源文件]`
+- 单纯的笔误 → 修正
+
+#### 孤岛修复
+
+lint 输出中 `orphan_pages` 列出的页面无入链（没有其他页面链接到它）：
+
+> **坑：index.md 中的条目不算入链。** lint 工具不把 index.md 的 `[[wikilink]]` 引用计为入链。必须从实际内容页面（entity/concept/source/synthesis）添加 `[[wikilink]]` 才能消除孤岛标记。
+
+修复步骤：
+1. 确认该页面已有出链（`has_outgoing_links: true`）——如果没有，先添加 `## 关联连接`
+2. 找到语义最相关的已有页面（entity/concept），在其 `## 关联连接` 区域添加指向孤岛页面的链接
+3. 重新运行 lint 确认 `orphan_count` 降至 0
+
+> 为什么：孤岛页面意味着知识网络断裂——没有任何页面可以导航到它。双向链接是 wiki 的核心机制，入链和出链缺一不可。
+
 ### 步骤 5.5：重命名检修（仅在重命名 source 文件时执行）
 
 如果本次操作涉及 source 文件重命名（例如修正slug），在更新 index.md 之后、归档之前，必须执行：
@@ -214,23 +304,62 @@ last_updated: YYYY-MM-DD
 
 > 为什么需要这一步：Obsidian wikilink 用的是文件名（不含 `.md`），source 文件改名后所有概念/实体页面的 `关联连接` 中的引用都会失效，变成死链。
 
-### 步骤 6：更新 sources 引用 + 归档源文件
+### 步骤 6：归档——统一 slug 命名 + sources 更新
 
-在确认以下全部完成后：
-- sources 页面已创建
-- 实体/概念页面已创建或更新
-- index.md 已更新
-- log.md 已更新
+将原始文件归档到 `09-archive/` 并用摘要 slug 重命名，使 `sources:` 字段与 wiki 页面标题可追溯。
 
-然后执行归档：
+#### 归档前 Checklist（逐项确认）
 
-1. **更新全部 `sources:` 字段**：将当前页面（source/entity/concept/synthesis）的 `sources:` 中所有指向原始 raw/ 路径的引用改为 `raw/09-archive/{文件名}`。注意：
-   - `09-archive/` 是**扁平目录**，所有文件直接放在其下，没有子目录
-   - 因此路径统一为 `raw/09-archive/文件名`，不要保留原始的子目录结构（如 `读书笔记/`、`数据科学/`）
-   - 如果文件名中包含逗号 `,`，YAML 中需要加引号或将整个 list 改为内联格式，确保逗号不被解析为列表分隔符
-2. **移动源文件**：将源文件移动到 `raw/09-archive/` 目录。
+```
+- [ ] sources/entity/concept/synthesis 页面的 sources 字段已更新为 raw/09-archive/ 路径
+- [ ] index.md 已注册新页面
+- [ ] log.md 已追加
+- [ ] lint 验证无新增问题
+- [ ] 以上全部确认后，再执行 mv
+```
+
+#### Step A：确定归档后的文件名
+
+归档文件使用**摘要页面的 slug**（而非保留原始文件名），确保 `sources:` 字段与 wiki 页面可追溯：
+
+- 如果本次创建了 source 页面：归档文件名为 `{source页面文件名}.md`（如 `摘要-姚顺宇AI访谈.md`）
+- 如果本次创建了 synthesis 页面：归档文件名为 `{synthesis页面文件名}.md`（如 `AI一线观察-姚顺宇访谈.md`）
+- 如果没有新建页面（纯归档场景）：使用基于主题的 kebab-case 命名
+
+```
+源文件（raw/03-transcripts/2026-05-11-对姚顺宇的4小时访谈…….md）
+  → 归档为（raw/09-archive/AI一线观察-姚顺宇访谈.md）
+```
+
+#### Step B：更新 sources 字段
+
+将当前所有页面（source/entity/concept/synthesis）的 `sources:` 中指向原始 raw/ 路径的引用，改为 `raw/09-archive/{slug文件名}`。注意：
+
+- `09-archive/` 是**扁平目录**，所有文件直接放在其下，没有子目录
+- 路径统一为 `raw/09-archive/文件名`，不要保留原始的子目录结构
+- 如果文件名中包含逗号 `,`，YAML 中需要加引号或将整个 list 改为内联格式
+
+**高效技巧：用 `execute_code` 批量更新。** 当 ingest 产出了多个新页面（source + 多个 entity/concept），它们的 `sources:` 字段都指向同一个 raw/ 路径。归档时需要全部改为 archive 路径。逐个 patch 效率低且容易遗漏。推荐用 `execute_code` 一步完成：
+
+```python
+from hermes_tools import search_files, patch
+results = search_files("<原始raw路径的关键词>", path="<wiki目录>", file_glob="*.md")
+pages = [m["path"] for m in results["matches"] if "code-design" not in m["path"] and "log.md" not in m["path"] and "index.md" not in m["path"]]
+for p in pages:
+    patch(p, "<旧raw路径>", "<新archive路径>")
+```
+
+排除条件根据实际情况调整（log.md 和 index.md 通常需要单独处理）。
+
+#### Step C：移动源文件
+
+```bash
+mv "raw/03-transcripts/原始文件名.md" "raw/09-archive/{slug}.md"
+```
 
 **绝对禁止修改源文件内部的文字。**
+
+> 为什么用 slug 重命名：archive 本质上是 source/synthesis 的原始素材备份，用同一个 slug 可以一眼看出哪个 archive 文件对应哪个 wiki 页面。跨 vault 迁移时也只需拷贝 `wiki/` + `raw/09-archive/` 两套目录即可保持完整溯源。
 
 ### 步骤 7：代码仓库解构（`/ingest code`）
 
@@ -319,7 +448,9 @@ last_updated: YYYY-MM-DD
     - 如有 `failed > 0`，逐条修复后再继续；如果 `defects` 中有子标题内容为空的组件，必须补写真实内容
 
     #### e) 最终判定
-    - 任何问题发现后**立即删除重写对应文件**，不允许带着问题交差
+    - 任何 `[ERROR]` 类缺陷（缺失文件）必须修复，不允许跳过
+    - `[WARN]` 类缺陷（子标题/占位符）优先修复，但最多迭代 2 轮。2 轮后仍残留的 WARN，标注到 log.md 中"已知问题"小节，交付当前版本继续
+    - 迭代上限：总计最多 2 轮修复循环。超出上限的剩余问题记录到 log.md 而非阻塞交付
 
 12. **等待用户确认**：向用户报告本次代码解构的产出物概览（多少组件、多少文件、覆盖了哪些源码目录），询问用户质量是否达标。用户确认通过后才执行下一步。未通过时根据反馈修改或补充。
 
@@ -343,4 +474,30 @@ last_updated: YYYY-MM-DD
 - 所有 wiki 页面必须包含 `## 关联连接` 区域，不能产生孤岛页面
 - 使用简体中文编写所有内容
 - 实体命名使用 TitleCase，来源/综合使用 kebab-case
-- **写前确认原则**：所有创建/写入文件的操作（包括 source、entity、concept、synthesis），必须在收到用户明确指令后方可执行。仅当用户说了"ingest"、"导入"、"保存"或类似关键词时，才自动创建文件。否则，只输出文本回答，先询问确认再动手。
+- **写前确认原则**：分为主动命令和隐式触发两种情况。
+  - **主动命令**（`/ingest`、`/ingest <path>`、/ingest code）：用户已明确下达指令，直接执行全流程，无需逐步确认。
+  - **隐式触发**（如"帮我把这篇文章收藏一下"、"导入这个 PDF"）：先展示提炼规划（核心主旨、识别的实体/概念、拟创建的页面列表），询问用户确认后再动手。
+  - **用户中途提出修改**（如"改成综述"、"不用建概念页"）：按用户要求调整，调整后继续执行，不要重新确认。
+- **Subagent 写入路径校验**：如果使用 Agent 工具启动子任务进行调研或生成，必须在 prompt 中明确指定输出路径。完成后用 `find` 或 `ls` 确认文件实际落在预期目录，防止子 agent 将文件写入错误位置。
+
+## 陷阱与已知问题
+
+### skill_manage patch 工具约束
+`skill_manage(action='patch')` 的匹配引擎无法跨越 YAML 前端（`---`）边界。以下操作会失败：
+- 试图从前端 `---` 上方的隐式位置匹配到 `name:` 行
+- 试图匹配跨越第一个 `---` 的文本
+- 匹配结果会导致 SKILL.md 不以 `---` 开头的任何替换
+
+**如果遇到 `"Patch would break SKILL.md structure: SKILL.md must start with YAML frontmatter"` 错误**：
+1. 用 `skill_view(name)` 完整读取当前内容
+2. 确保 `old_string` 完全在内容正文区域内（不跨任何 `---`）
+3. 如果正文中没有出现旧字符串，改用全文件重写（`skill_view` 读取 → 修改 → `skill_manage(action='edit')` 传入完整新内容）
+
+### SKILL.md 文件大小
+技能文件过大会影响 Hermes 的技能发现和加载可靠性。位于 `~/.claude/skills/`（通过 `external_dirs` 加载）的技能文件建议保持在 200 行/10KB 以内。超过此规模的技能应考虑：
+- 将详细步骤移至 `references/` 支持文件
+- 拆分职责到多个技能
+- 保留 SKILL.md 核心步骤，外部细节通过 `references/` 引用
+
+### 代码仓库标志文件残留
+`ingest code` 的步骤 13（清理标志文件）只有在用户确认通过后才执行。如果本轮执行后仍有 raw/05-coderepo/ 下的 .md 文件残留，说明该仓库已 partial-ingested 但未获得用户终审确认。下次遇到同一文件时，应先检查 wiki/code-design/ 下是否已有对应文档，避免重复解构。

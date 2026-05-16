@@ -55,20 +55,22 @@ cd /path/to/my-wiki
 
 ```
 llm-wiki/
-├── CLAUDE.md              # 项目指令
-├── raw/                   # 原始资料收件箱（只读，处理后归档）
-│   ├── 01-articles/       # 网页剪藏文章
-│   ├── 02-papers/         # 论文 PDF
-│   ├── 03-transcripts/    # 视频/播客转录
-│   ├── 04-weread/         # 微信读书划线笔记（自动同步）
-│   ├── 05-coderepo/       # 代码仓库工作区（待解构的源码目录）
-│   └── 09-archive/        # 已处理文件归档（仅追加，不读取）
+├── CLAUDE.md              # 项目指令（从 vault 同步）
+├── raw/                   # 原始资料收件箱
+│   ├── 01-articles/    # 网页剪藏文章
+│   ├── 02-papers/      # 论文 PDF
+│   ├── 03-transcripts/ # 视频/播客转录
+│   ├── 04-weread/      # 微信读书划线笔记（自动同步）
+│   ├── 05-coderepo/    # 代码仓库工作区
+│   └── 09-archive/     # 已处理文件归档（仅追加，不读取）
+
 ├── wiki/                  # 知识编译输出层
-│   ├── code-design/       # 软件设计文档（arc42 标准仓库解构产出）
-│   ├── sources/           # 来源摘要
-│   ├── entities/          # 实体
-│   ├── concepts/          # 概念
-│   ├── syntheses/         # 综合研究
+│   ├── code-design/    # 软件设计文档
+│   ├── concepts/       # 概念
+│   ├── entities/       # 实体
+│   ├── sources/        # 来源摘要
+│   ├── syntheses/      # 综合研究
+
 │   ├── index.md           # 全局内容字典
 │   └── log.md             # 操作日志
 └── assets/                # 媒体资产
