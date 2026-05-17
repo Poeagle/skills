@@ -23,6 +23,8 @@ user-invocable: true
 - `wiki/code-design/` — 软件设计文档（基于 arc42 标准的仓库解构产出）
 - `raw/04-weread/` 🔒 — 微信读书同步的划线笔记（只读，不在 ingest 中处理，由 query 调用时按需读取）
 
+> **例外：用户主动要求整理 weread 划线时**，可以基于 `raw/04-weread/` 文件创建 `wiki/sources/摘要-xxx.md` 摘要。流程与普通 ingest 相同（读取 → 提炼 → 创建页面 → 更新 index），但不移动源文件（weread 文件保持原位，不归档到 09-archive）。`sources:` 字段直接指向 `raw/04-weread/原文件名.md`。
+
 ## 触发逻辑
 
 1. **用户执行 `/ingest`**：扫描 `raw/` 所有子目录（排除 `09-archive/`），找出待处理文件。
@@ -231,6 +233,8 @@ last_updated: YYYY-MM-DD
 **更新 `wiki/index.md`：**
 按照 CLAUDE.md 规定的格式，将新增页面添加到对应分类下。
 
+> **坑：index.md 分区必须匹配页面类型。** 实体放 Entities 区、概念放 Concepts 区、来源放 Sources 区、综合放 Syntheses 区。常见错误：把新增的 synthesis 页面插入到了 Entities 区域（因为离 Entities 区的尾部最近）。插入前先确认当前行属于哪个分区。
+
 **更新 `wiki/log.md`：**
 追加操作日志（Append-only）：
 ```markdown
@@ -268,9 +272,18 @@ python3 ~/.claude/skills/lint/scripts/lint.py
 检查要点：
 - 新仓库的 `code_design` 检查：`passed/total_components` 是否等于 1
 - 死链计数：不得高于 ingest 前的基线（首次扫描无基线则确保新增页面零死链）
-- 孤岛计数：检查是否有页面无入链（`has_outgoing_links: false`）
 - 如有 `failed > 0`，逐条修复后再继续
 
+> 为什么：lint 是健康防线，应该每次 ingest 后自动触发，而不是等用户想起来才手动运行。
+
+#### 孤岛页面修复陷阱
+
+lint 报告的"孤岛页面"指**没有其他 wiki 页面链接到它**的页面。关键陷阱：
+
+- **index.md 中的链接不算入链**。lint 的孤岛检测只看 `wiki/` 下其他页面的 `[[wikilink]]` 引用，index.md 的注册不计入。
+- **仅添加出链（关联连接）不够**。出链解决了 `has_outgoing_links` 字段，但页面仍被标记为孤岛。
+- **正确修复方式**：同时做两步——① 给孤岛页面添加 `## 关联连接`（出链），② 找一个相关页面添加指向孤岛的 `[[wikilink]]`（入链）。
+- **入链放置位置**：选择与孤岛页面主题最相关的已有页面，在其 `## 关联连接` 区域追加一行。
 > 为什么：lint 是健康防线，应该每次 ingest 后自动触发，而不是等用户想起来才手动运行。
 
 #### 死链修复
