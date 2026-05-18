@@ -20,6 +20,14 @@ description: ⛔ 硬性流程入口 — LLM Wiki (zenWiki) 操作协议。凡是
 
 本 skill 不重复 CLAUDE.md 的内容，仅记录 Hermes 特有的操作备注。
 
+## 常见陷阱
+
+### nvwa 示例文件 ≠ 独立 skill
+`nvwa/examples/` 下的文件（如 `zhang-yiming-perspective`、`paul-graham-perspective`）是 nvwa skill 的产出示例，**不是可独立加载的 skill**。用 `skill_view(name='nvwa:zhang-yiming-perspective')` 会报 "not found"。
+- **正确做法**：直接 `search_files()` 在 `wiki/` 或 `raw/` 中搜索相关内容
+- **或者**：用 `skill_view(name='nvwa', file_path='examples/zhang-yiming-perspective.md')` 读取文件内容
+- 如果以上都找不到，走 query skill 的降级路径
+
 ## Hermes 特有备注
 
 ### 搜索命令
@@ -42,3 +50,16 @@ search_files("*.md", target="files", path="/Users/ymchen/obsidian/zenWiki/wiki/"
 
 ### wiki/log.md
 操作日志，任何操作后必须追加记录。
+
+## ⚠️ 常见违规模式（Pitfalls）
+
+### 违规 1：「我觉得我已经知道了」→ 跳过协议直接回答
+**触发场景**：用户问的问题涉及 wiki 中已有的人物/概念，而模型训练数据恰好也覆盖该话题。
+**后果**：回答基于训练数据而非 wiki 实际内容，可能遗漏 wiki 中的独特视角、用户个人笔记、或微信读书划线等一手素材。
+**正确做法**：即使确信知道答案，也必须走完 ①读 CLAUDE.md → ②加载 query skill → ③按 skill 检索 → ④综合回答。wiki 的价值在于它包含用户自己的整理和引用，不是通用知识的重复。
+**已有违规记录**：2026-05-16（回答 aiGameAgent 设计跳过 skill）、2026-05-18（回答王阳明 vs 张一鸣直接用训练数据）。
+
+### 违规 2：用 session_search 替代 wiki 检索
+**触发场景**：想快速回答，觉得 session_search 能找到相关信息。
+**后果**：session_search 搜的是历史对话记录，不是 wiki 知识库。对话记录是一次性的、未编译的、缺乏结构的；wiki 是经过 /ingest 编译的结构化知识。
+**正确做法**：session_search 只用于回忆「之前做过什么」，不用于回答「wiki 里关于 X 是怎么说的」。

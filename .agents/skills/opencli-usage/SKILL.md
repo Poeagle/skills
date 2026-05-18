@@ -182,6 +182,19 @@ opencli xiaohongshu search "x" --window background --site-session ephemeral -f j
 opencli xiaohongshu search "x" --window background -f json
 ```
 
+## ⚠️ FIRST RULE: Check adapter BEFORE browser tools
+
+**For ANY web-related task** (search, scrape, video metadata, comments, user info, content extraction), the FIRST action MUST be:
+
+```bash
+opencli list | grep -i <keyword>
+```
+
+If an adapter exists → use `opencli <site> <cmd>` (faster, cleaner, no login, no anti-bot).
+If no adapter exists → THEN fall back to browser tools.
+
+**Never skip this check.** The 5 seconds saved by jumping to browser tools costs 10+ minutes of login walls, anti-bot blocks, and incomplete data. This was a verified incident on 2026-05-17: agent used browser tools to scrape Bilibili for 10+ minutes (hit login walls, couldn't get subtitles) when `opencli bilibili subtitle` would have returned the full transcript in one call.
+
 ## Don't
 
 - Don't paste this skill's command list into your plan; it will rot. Call `opencli list -f json` at the start of a task instead.

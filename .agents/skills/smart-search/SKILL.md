@@ -174,6 +174,27 @@ opencli xiaohongshu search "xxx" --window background -f json
 
 ## 平台特定陷阱
 
+### 微博热搜 Chrome Bridge 断连时的 API 回退
+
+`opencli weibo hot` 依赖 Chrome Browser Bridge 扩展。若 `opencli doctor` 显示 Extension: disconnected，先尝试 `opencli daemon restart` + 在 `chrome://extensions/` 刷新扩展。若仍不可用，可直接调微博 Ajax API 作为回退：
+
+```bash
+curl -sL "https://weibo.com/ajax/statuses/hot_band" \
+  -H "User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36" \
+  -H "Referer: https://weibo.com/" \
+  -H "X-Requested-With: XMLHttpRequest" | python3 -c "
+import json, sys
+data = json.load(sys.stdin)
+for item in data.get('data', {}).get('band_list', [])[:30]:
+    print(f\"{item.get('rank')}. {item.get('word')} ({item.get('num', '')}) [{item.get('label_name', '')}]\")"
+```
+
+注意：另一个端点 `weibo.com/ajax/side/hotSearch` 已被禁止（返回 Forbidden），不要使用。
+
+### 小红书 `feed` 返回的是个性化推荐，不是全站热搜
+
+`opencli xiaohongshu feed` 基于当前登录账号的推荐算法，返回的是**个性化内容**而非全站热门榜单。向用户展示时必须说明这一点。如果用户要全站热搜，小红书没有公开热搜接口，可建议用关键词搜索替代。
+
 ### 小红书 `note` 命令需要完整签名 URL
 
 `opencli xiaohongshu note <id>` 已不再接受纯 note-id。必须传完整的带 `xsec_token` 的 URL：

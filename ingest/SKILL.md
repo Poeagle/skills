@@ -46,7 +46,7 @@ user-invocable: true
 
 当源材料来自外部（YouTube链接、网页URL等，而非 raw/ 中已有文件）：
 
-1. **获取内容**：使用 defuddle（网页）或 youtube_transcript_api（YouTube字幕）提取内容
+1. **获取内容**：使用 defuddle（网页）或 youtube_transcript_api（YouTube字幕）提取内容。**⚠️ 对于 Bilibili、YouTube 等有 OpenCLI adapter 的平台，优先用 `opencli <site> <cmd>` 获取**（如 `opencli bilibili subtitle <bvid>` 获取字幕），adapter 更快、不需要登录、不需要处理反爬。只有当 adapter 不存在或失败时才回退到 defuddle/youtube_transcript_api。
 2. **判断分类**：根据内容类型存入对应 raw/ 子目录：
    - YouTube 转录 → `raw/03-transcripts/`
    - 网页文章 → `raw/01-articles/`
@@ -497,6 +497,13 @@ mv "raw/03-transcripts/原始文件名.md" "raw/09-archive/{slug}.md"
   - **隐式触发**（如"帮我把这篇文章收藏一下"、"导入这个 PDF"）：先展示提炼规划（核心主旨、识别的实体/概念、拟创建的页面列表），询问用户确认后再动手。
   - **用户中途提出修改**（如"改成综述"、"不用建概念页"）：按用户要求调整，调整后继续执行，不要重新确认。
 - **Subagent 写入路径校验**：如果使用 Agent 工具启动子任务进行调研或生成，必须在 prompt 中明确指定输出路径。完成后用 `find` 或 `ls` 确认文件实际落在预期目录，防止子 agent 将文件写入错误位置。
+
+## Bilibili 视频采集
+
+B 站视频转录的采集方法见 `references/bilibili-source.md`。核心命令：
+```bash
+opencli bilibili subtitle <BV号> --window background --site-session ephemeral -f json
+```
 
 ## 陷阱与已知问题
 
