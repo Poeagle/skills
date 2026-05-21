@@ -125,6 +125,44 @@ opencli xiaohongshu search "xxx" --window background -f json
 
 一旦某个 AI 站点已经执行过一次真实查询，就不要在同一题里改写关键词后再次调用该 AI 站点。若答案不足，优先补专用源，不要反复追打同一个 AI 站点。
 
+## 实时性查询 / 服务状态检查
+
+当用户询问 "现在 X 有问题吗"、"X 是不是挂了"、"目前 X 的情况" 等实时状态类问题时，遵循以下流程：
+
+### 流程
+
+1. **查官方状态页**（如有）— 这是最权威的实时运行状态
+   - Anthropic/Claude: `status.claude.com`
+   - OpenAI: `status.openai.com`
+   - GitHub: `www.githubstatus.com`
+   - 以此类推
+
+2. **搜社交媒体** — 用户报告的作用域补充
+   - X/Twitter: 搜 `"<service> down" 或 "<service> issue"`，关注最近 24h 帖子
+   - 小红书: 搜 `"<服务名> 问题 故障 宕机"`，注意用发布时间过滤
+   - Reddit: `opencli reddit search`，排在 `r/<service>` 内
+
+3. **交叉验证** — 不要把单一平台的抱怨当作 "官方有问题"
+   - 一条热帖 ≠ 大规模宕机
+   - 如果官方状态页显示 Operational，但社交媒体大面积抱怨 → 可能是局部或 account-specific 问题
+   - 如果官方状态页显示 Degraded/Major Outage → 确认信息
+
+### 搜索词中的时间约束
+
+"现在" 类查询的搜索词应 **明确包含时间维度**，不要只丢关键词：
+
+- 加词：`"Claude Code 宕机 今天"`、`"Claude Code issue 2026"`、`"Claude Code bug 最近"`
+- 主动按发布时间排序或过滤：从搜索结果中只看最近 1-3 天的
+- 不要混合展示几周前的旧帖和新帖而不做区分
+
+### 汇报结构
+
+对于状态检查类查询，回答应包含三层：
+
+1. **官方状态**：什么级别（Operational / Degraded / Outage）
+2. **用户反馈**：社交媒体上多少人报类似问题、什么表现
+3. **对你的影响评估**：简短判断是否是你会遇到的
+
 ## AI 查询词建议
 
 当使用 AI 源时，不要只丢一个过短关键词。优先构造成“主题 + 目标 + 限定条件”的查询。
