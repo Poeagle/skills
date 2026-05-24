@@ -83,6 +83,17 @@ def append_to_csv(year: int, new_rows: pd.DataFrame):
     )
 
 
+PROCESSED_LOG = os.path.join(DATA_DIR, "processed.log")
+
+
+def mark_processed(filepath: str):
+    """Append timestamp + filename to processed.log."""
+    ts = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    line = f"{ts} | {os.path.basename(filepath)}\n"
+    with open(PROCESSED_LOG, "a", encoding="utf-8") as f:
+        f.write(line)
+
+
 def main():
     parser = argparse.ArgumentParser(description="iCost xlsx → csv 转换")
     parser.add_argument("--file", required=True, help="iCost 导出的 xlsx 文件路径")
@@ -96,7 +107,11 @@ def main():
     years = convert(args.file)
     for year in sorted(years.keys()):
         append_to_csv(year, years[year])
-    print(f"✅ 完成，共 {sum(len(v) for v in years.values())} 条记录")
+    total = sum(len(v) for v in years.values())
+    print(f"✅ 完成，共 {total} 条记录")
+    mark_processed(args.file)
+    os.remove(args.file)
+    print(f"🗑️ 已删除原始文件: {args.file}")
 
 
 if __name__ == "__main__":
