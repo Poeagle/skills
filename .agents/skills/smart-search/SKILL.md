@@ -286,6 +286,7 @@ for item in data:
 - **`references/sources-shopping.md`** — 购物
 - **`references/sources-travel.md`** — 旅游
 - **`references/sources-other.md`** — 其他垂直源
+- **`references/sources-real-estate.md`** — 房产/房价研究（中国房产平台自动化拦截严重，DuckDuckGo 是最可靠的回退方案）
 
 只读与当前查询相关的文件，无需全部加载。
 
