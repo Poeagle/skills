@@ -288,7 +288,19 @@ for item in data:
 - **`references/sources-other.md`** — 其他垂直源
 - **`references/sources-real-estate.md`** — 房产/房价研究（中国房产平台自动化拦截严重，DuckDuckGo 是最可靠的回退方案）
 
-只读与当前查询相关的文件，无需全部加载。
+只读与当前查询相关的文件，无需全部加载。详情见各参考文件：
+
+- **`references/sources-ai.md`**
+- **`references/sources-tech.md`**
+- **`references/sources-social.md`**
+- **`references/sources-media.md`**
+- **`references/sources-info.md`**
+- **`references/sources-shopping.md`**
+- **`references/sources-travel.md`**
+- **`references/sources-other.md`**
+- **`references/sources-real-estate.md`**
+- **`references/browser-fallback-search.md`** ← 浏览器回退搜索（搜索引擎全封时的急救方案）
+- **`references/chrome-local-history.md`**
 
 ## Chrome 本地历史作为数据源
 
