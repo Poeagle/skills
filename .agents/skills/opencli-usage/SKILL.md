@@ -195,6 +195,8 @@ If no adapter exists → THEN fall back to browser tools.
 
 **Never skip this check.** The 5 seconds saved by jumping to browser tools costs 10+ minutes of login walls, anti-bot blocks, and incomplete data. This was a verified incident on 2026-05-17: agent used browser tools to scrape Bilibili for 10+ minutes (hit login walls, couldn't get subtitles) when `opencli bilibili subtitle` would have returned the full transcript in one call.
 
+⚠️ **This rule applies even when the task feels like "browsing" or "exploring" a social platform.** Do NOT fall back to browser tools because you think a `UI` or `COOKIE` adapter is inconvenient. Xiaohongshu (`opencli xiaohongshu search`) has a working search adapter that avoids IP blocks and login walls. If the browser returns "IP存在风险" or a login redirect, that's proof you should have used opencli first. Verified incident 2026-05-25: agent used browser to search Xiaohongshu → IP-blocked → user asked "为什么不用opencli".
+
 ## Don't
 
 - Don't paste this skill's command list into your plan; it will rot. Call `opencli list -f json` at the start of a task instead.

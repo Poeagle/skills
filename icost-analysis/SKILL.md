@@ -181,8 +181,10 @@ description: 个人消费预算对比报告系统。基于 iCost 账单对比用
 ⚠️ **脚本修复后必做：** 用户说"即刻修复"时，修完先不要报告结果——
    1. 造测试 xlsx → 跑 ingest.py 验证全流程（数据摄入✅ · processed.log写入✅ · 原文件删除✅）
    2. 清理测试数据
-   3. 推送测试通过确认到 QQ
-   **用户原话：** "修复完测试一下，测试通过了要推送"
+   3. `cd ~/.claude/skills && git add/commit/push` — 推送到远程 skills 仓库（"推送"=git push，不是发消息）
+   4. 在对话中告知完成
+   **用户原话：** "修复完测试一下，测试通过了要推送" — 这里"推送"=git push 到远程仓库
+   ❌ 踩坑：上次修完 ingest.py 后，我把"推送"误解为发 QQ 消息 → 被纠正"我是说推送到远程skills仓库"
 
 ### 手动查询模式
 用户直接问时：
@@ -195,11 +197,13 @@ description: 个人消费预算对比报告系统。基于 iCost 账单对比用
 ## 脚本说明
 
 ### ingest.py
+- 用法：`python3 scripts/ingest.py --file <xlsx路径>`
 - 读取 xlsx 的 `收支账单` sheet
 - 仅保留 类型 == "支出" 的记录
 - 丢弃图片相关列
 - 按日期拆分到年度 csv，去重后追加
-- 写入 processed.log，删除原始 xlsx
+- 写入 processed.log（时间戳+文件名）
+- 自动删除原始 xlsx
 
 ### report.py
 - 读年度 csv
@@ -210,8 +214,15 @@ description: 个人消费预算对比报告系统。基于 iCost 账单对比用
 
 ## cron 配置
 
+由 Hermes cronjob 工具管理（非原始 crontab）：
+
 ```
-0 7 * * 1 python3 ~/.claude/skills/icost-analysis/scripts/report.py 2>> ~/records/finance/crontab.err.log
+名称: icost-weekly-report
+计划: 0 7 * * 1（每周一 07:00）
+技能: icost-analysis
+目标: local（cron session 内运行 report.py，由 cron session 的 LLM 发 QQ 消息）
+模式: agent-driven（非 no_agent，会加载 skill 后按工作流执行）
 ```
 
-由 Hermes cronjob 工具设定，每周一 07:00 执行。
+> 旧式 crontab `0 7 * * 1 python3 scripts/report.py` 已废弃，不要用它。
+> 修改 cron 配置用 `cronjob(action='update', job_id='0d15f8b6b28b', ...)`。
