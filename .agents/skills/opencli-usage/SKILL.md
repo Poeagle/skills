@@ -193,9 +193,14 @@ opencli list | grep -i <keyword>
 If an adapter exists → use `opencli <site> <cmd>` (faster, cleaner, no login, no anti-bot).
 If no adapter exists → THEN fall back to browser tools.
 
-**Never skip this check.** The 5 seconds saved by jumping to browser tools costs 10+ minutes of login walls, anti-bot blocks, and incomplete data. This was a verified incident on 2026-05-17: agent used browser tools to scrape Bilibili for 10+ minutes (hit login walls, couldn't get subtitles) when `opencli bilibili subtitle` would have returned the full transcript in one call.
+**Why adapters bypass anti-bot:** The Hermes `browser_navigate` tool runs on a **cloud browser** (Browserbase). Google, Xiaohongshu, Cloudflare-protected sites all flag its IP range and show CAPTCHA/security pages. OpenCLI adapters (PUBLIC/COOKIE/INTERCEPT/UI) run via the **users local Chrome** on their own machine — real browser fingerprint, real cookies, users Clash proxy, residential IP. That is the architectural difference. When the cloud browser shows a security check or IP risk warning, OpenCLI adapter is the fix — not another cloud browser retry.
 
-⚠️ **This rule applies even when the task feels like "browsing" or "exploring" a social platform.** Do NOT fall back to browser tools because you think a `UI` or `COOKIE` adapter is inconvenient. Xiaohongshu (`opencli xiaohongshu search`) has a working search adapter that avoids IP blocks and login walls. If the browser returns "IP存在风险" or a login redirect, that's proof you should have used opencli first. Verified incident 2026-05-25: agent used browser to search Xiaohongshu → IP-blocked → user asked "为什么不用opencli".
+**Never skip this check.** The 5 seconds saved by jumping to the cloud browser costs 10+ minutes of CAPTCHAs, login walls, and anti-bot blocks. Verified incidents:
+- 2026-05-17: Agent scraped Bilibili for 10+ minutes (login walls, could not get subtitles) when `opencli bilibili subtitle` returned full transcript in one call.
+- 2026-05-25: Agent opened Xiaohongshu in cloud browser → IP-blocked → user asked why not use opencli.
+- 2026-05-29: Agent hit Google CAPTCHA and Xiaohongshu security block in cloud browser. OpenCLI adapters (`opencli xiaohongshu search`) bypassed all — because they run on the users local Chrome with their Clash proxy.
+
+⚠️ **This rule applies even when the task feels like browsing or exploring a social platform.** Do NOT fall back to cloud browser tools because a UI or COOKIE adapter seems inconvenient. Xiaohongshu (`opencli xiaohongshu search`) avoids all IP blocks. If the cloud browser returns an IP risk or login redirect, that is proof you should have used opencli first.
 
 ## Don't
 
