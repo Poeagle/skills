@@ -291,6 +291,7 @@ metadata:
 - `disk-recovery` — 磁盘损坏与数据恢复
 - `environment-migration` — 环境迁移
 - `file-cleanup` — 文件堆积 / 残留清理
+- `redo-log-config` — Redo Log / dataSync / Cache Engine 配置参数及写入模型（参考 references/redo-log-config.md）
 - `license-update` — License 更新与过期处理
 - `plugin-issues` — 插件问题
 - `security-guide` — 安全配置与权限管理
