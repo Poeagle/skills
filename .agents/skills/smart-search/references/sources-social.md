@@ -17,7 +17,10 @@
 ### xiaohongshu
 
 - 适用：生活方式、穿搭、美妆、旅行、真实体验
-- 使用前先运行：`opencli xiaohongshu -h`
+- 使用前先运行：`opencli xiaohongshu -h`（目前仅有 `user` 命令）
+- **完整的搜索、笔记详情、评论功能在 `rednote` 站点下**：`opencli rednote -h`
+- ⚠️ 域名差异：`xiaohongshu` 命令用 xiaohongshu.com；`rednote` 的 `note`/`comments` 命令需用 **rednote.com** 域名
+- 登录墙挡住正文时，`note` 命令的 `tags` 字段仍可提取关键信息（店名、品牌、地名等）；`rednote comments` 命令同样可读，评论区常有"这是哪家？"的提问和回复，可用于补充内容
 
 ### zhihu
 
@@ -47,5 +50,5 @@
 ## 路由提示
 
 - 用户明确指定某个平台时，直接用该平台
-- 用户只说“社交媒体上怎么看”时，可先选 `grok` 或 `doubao`
+- 用户只说"社交媒体上怎么看"时，可先选 `grok` 或 `doubao`
 - AI 只给摘要而没有原始帖子时，再切到对应社交站点

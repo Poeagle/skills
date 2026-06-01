@@ -257,19 +257,80 @@ for item in data.get('data', {}).get('band_list', [])[:30]:
 
 `opencli xiaohongshu feed` 基于当前登录账号的推荐算法，返回的是**个性化内容**而非全站热门榜单。向用户展示时必须说明这一点。如果用户要全站热搜，小红书没有公开热搜接口，可建议用关键词搜索替代。
 
-### 小红书 `note` 命令需要完整签名 URL
+### 小红书搜索和笔记读取：两个站点名，两种行为
 
-`opencli xiaohongshu note <id>` 已不再接受纯 note-id。必须传完整的带 `xsec_token` 的 URL：
+小红书有**两个域名**和**两个对应的 opencli 站点名**：
+
+| 域名 | 适配器 | 搜索(search) | 笔记(note) | 评论(comments) |
+|---|---|---|---|---|
+| `xiaohongshu.com` | `opencli xiaohongshu` | ✅ **推荐优先使用** | ❌ 不支持 | ❌ 不支持 |
+| `rednote.com` | `opencli rednote` | ⚠️ 可能 AUTH_REQUIRED | ✅ 需要登录 | ✅ 需要登录 |
+
+**策略：**
+
+1. **搜索优先用 `opencli xiaohongshu search`** — 用户大概率已登录 xiaohongshu.com，搜索直接可工作，无需登录墙
+2. **搜索失败时降级到 `opencli rednote search`** — 如果 xiaohongshu search 返回空或失败，再试 rednote
+3. **读笔记内容必须用 `rednote note`** — 这个命令属于 rednote 站点，且须用 `rednote.com` 域名
+
+### Rednote `note` 命令：URL 格式要求和登录墙应对
+
+`opencli rednote note` 的 URL 必须用 `rednote.com` 域名：
 
 ```bash
-# ❌ 不行
-opencli xiaohongshu note "69e37709000000001a024c9a"
+# ✅ 正确格式
+opencli rednote note "https://www.rednote.com/explore/{note_id}?xsec_token={token}"
 
-# ✅ 从 search 结果中拿完整 URL
-opencli xiaohongshu note "https://www.xiaohongshu.com/search_result/69e37709000000001a024c9a?xsec_token=AB-6RO...&xsec_source="
+# ❌ 不行 — 域名必须是 rednote.com
+opencli rednote note "https://www.xiaohongshu.com/explore/69d3a4ae...?xsec_token=..."
+opencli rednote note "https://www.xiaohongshu.com/search_result/69d3a4ae...?xsec_token=..."
 ```
 
-模式：先 `search` → 从结果中提取 `url` 字段 → 传给 `note`。
+**从 search 结果构建 note URL 的模式：**
+
+1. 先 `opencli xiaohongshu search "关键词" -f json` → 得到每条的 `url` 字段
+2. 提取 note_id：search result URL 中的 `/search_result/{note_id}` 部分
+3. 提取 `xsec_token`（从 URL query 参数中）
+4. 拼成：`https://www.rednote.com/explore/{note_id}?xsec_token={token}`
+
+**当登录墙挡住正文时（显示 "Log in with phone number"）：**
+
+此时不要尝试浏览器回退——云浏览器也会被 IP 封锁。
+
+**仍然可用的数据：**
+
+| 可用数据 | 获取方式 | 内容示例 |
+|---|---|---|
+| tags | `opencli rednote note ... -f json` → tags 字段 | `#春风食堂`、`#gaga鲜语`、`#滨江美食` |
+| 账号名 | 同上 → author 字段 | "山竹没有小蛮腰" |
+| 互动数据 | 同上 → likes / collects / comments | 👍1630, 收藏901, 评论33 |
+| 评论内容 | `opencli rednote comments ... -f json` | 评论区常有"这是哪家店"的回答，能直接提取店名/地址 |
+
+**从 tags + comments 重建内容的方法：**
+1. 从 `tags` 提取实体名（店名、品牌、地点）
+2. 从 `comments` 找用户在问什么、别人回了什么
+3. 拿到具体名字后，**重新用关键词搜索**这些名字，通常能找到更直接的帖子
+4. 如果有多个相关笔记，把每篇的 tags + comments **合并来看**，能拼凑出完整的推荐名单
+
+**具体萃取示例（来自实际会话）：**
+
+用户问"杭州一人食健康餐"，搜索拿到几篇热门笔记，但正文都被登录墙挡住。萃取流程：
+
+```
+第1步：opencli xiaohongshu search "杭州 一人食" → 拿到笔记列表
+第2步：对每篇笔记用 opencli rednote note "https://www.rednote.com/explore/{id}..." -f json
+       → 正文返回 "Log in with phone number"
+       → 但 tags 字段有价值：#春风食堂、#gaga鲜语、#一恒一素
+第3步：对同笔记用 opencli rednote comments ... -f json
+       → 评论里有人说 "没点开我就知道是春风食堂！"
+       → 由此确认具体店名
+第4步：用确认的店名重新搜索 "杭州 春风食堂" → 得到更多相关笔记
+```
+
+这样即使正文被登录墙挡住，也能从 tags + comments 萃取出具体的餐厅/店铺/地点名称。**不要只给用户展示帖子标题和点赞数——用户要的是具体名字。**
+
+### 重要：收到 ARGUMENT 错误时不要尝试浏览器回退
+
+`opencli rednote note` 返回 `ARGUMENT: rednote note now requires a full signed URL` 时，错误信息本身告诉你怎么修。**这不是被反爬了**，只是 URL 格式不对。修 URL，不要开浏览器。
 
 ### Bilibili 字幕提取需 GBK 解码
 
