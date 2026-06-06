@@ -1,0 +1,42 @@
+{
+  "skill_name": "remote-claude",
+  "evals": [
+    {
+      "id": 0,
+      "prompt": "我在本机跑了 OctoAlly (localhost:42010)，远程服务器上的项目在 /home/xlli/dolphindb_manager/skills。帮我查一下 OctoAlly 上有哪些项目，然后在 skills 项目上创建一个 claude session，跑一条命令 ls -la 看看目录结构。把项目列表和 ls 结果告诉我。",
+      "expected_output": "成功列出 OctoAlly 项目列表，并创建 session 在 skills 项目上执行 ls -la，返回目录内容。",
+      "files": [],
+      "expectations": [
+        "读取了 /api/agent/capabilities",
+        "成功调用了 GET /api/projects",
+        "成功创建了 POST /api/sessions",
+        "成功轮询了 display 端点获取输出",
+        "最终输出了 skills 目录的 ls -la 结果"
+      ]
+    },
+    {
+      "id": 1,
+      "prompt": "OctoAlly 跑在 localhost:42010。远程服务器上我有个项目 /home/xlli/dolphindb_manager，项目 ID 是 hyiRb4W2M0Lc。我需要你创建一个 claude session，让 claude 读一下项目的 README.md，然后告诉我这个项目是做什么的。完成之后帮我清理 session。",
+      "expected_output": "成功创建 session，让 claude 读取了 README.md，返回了项目简介，然后终止了 session。",
+      "files": [],
+      "expectations": [
+        "创建了 session 并指定了 project_id",
+        "轮询到 claude 的输出",
+        "返回了 README.md 的内容或摘要",
+        "在结束后调用了 DELETE /api/sessions/:id"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "localhost:42010 上有 OctoAlly 服务。远程服务器上 /home/xlli/dolphindb_manager/skills 项目已经有 ID PEwx-q8iwGhQ。试一下用 WebSocket 方式连接创建一个 session 然后获取它的状态，再终止它。如果 WebSocket 连不上，用 REST 方式替代。",
+      "expected_output": "尝试了 WebSocket 连接，如果失败则用 REST API 完成创建→查看状态→终止的全流程。",
+      "files": [],
+      "expectations": [
+        "尝试了 WebSocket 方式连接",
+        "成功创建了 session",
+        "成功获取了 session 状态",
+        "成功终止了 session"
+      ]
+    }
+  ]
+}
