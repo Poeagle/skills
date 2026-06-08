@@ -7,7 +7,7 @@ Usage:
 
 默认当前年份。结果打印到终端。
 """
-import sys, csv
+import sys, csv, os
 from collections import defaultdict
 from datetime import datetime
 

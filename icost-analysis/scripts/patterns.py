@@ -14,7 +14,7 @@ Usage:
     python3 ~/.claude/skills/icost-analysis/scripts/patterns.py [year1 year2 ...]
     默认分析所有年份。
 """
-import sys, csv
+import sys, csv, os
 from collections import defaultdict
 from datetime import datetime
 
