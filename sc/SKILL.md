@@ -44,6 +44,30 @@ Skill creator 可能被各种技术背景的人使用。你可能还不知道（
 
 ## 创建 skill
 
+### Git 工作流要求（硬性规则）
+
+在 `~/.claude/skills/` 仓库中工作的所有 skill 操作，**必须遵守以下流程**：
+
+1. **Skill 创建/编辑 → 立即提交并推送**
+   - 每次创建新 skill 或修改现有 skill 后，作为一个逻辑单元提交
+   - 不要在多次改动后才一次性提交
+   - 推送不及时会导致后续 agent 版本不同步
+
+2. **执行命令：**
+   ```bash
+   cd ~/.claude/skills
+   git add <changed-files>
+   git commit -m "类型: 改动描述"   # 类型: feat/fix/refactor/docs/chore/test
+   git push
+   ```
+
+3. **每次 iteration（测试迭代）结束后，如果 skill 有改动，也必须提交并推送。** 不要在"等最终版本完成"后才一次性提交——中间版本也要及时同步。
+
+**技能目录约定：**
+- 开发中的新技能放在 `~/.claude/skills/<name>/SKILL.md`
+- 不要放在 `~/.hermes/skills/` 下——那里是 Hermes 内建技能的位置，不受 git 管理
+- 本仓库的 origin 是 `git@github.com:Poeagle/skills.git`
+
 ### 捕获意图
 
 首先理解用户的意图。当前对话可能已经包含了用户想要捕获的工作流程（例如，用户说"把这个变成 skill"）。如果是这样，先从对话历史中提取答案——使用的工具、步骤顺序、用户所做的修正、观察到的输入/输出格式。用户可能需要补充缺失的信息，并且应在进入下一步之前确认。
@@ -304,19 +328,6 @@ kill $VIEWER_PID 2>/dev/null
 4. **寻找跨测试用例的重复工作。** 阅读测试运行的记录，注意 subagent 是否都独立编写了类似的辅助脚本，或者对某件事采用了相同的多步骤方法。如果所有 3 个测试用例都导致 subagent 编写了 `create_docx.py` 或 `build_chart.py`，这是一个强烈的信号，表明 skill 应该捆绑该脚本。编写一次，放入 `scripts/` 中，并告诉 skill 使用它。这可以节省未来每次调用时重新发明轮子的时间。
 
 这项任务相当重要（我们正在努力创造数十亿美元的年经济价值！），你的思考时间不是瓶颈；慢慢来，仔细权衡。我建议编写一份修订草稿，然后重新审视并做出改进。尽最大努力站在用户的角度，理解他们想要什么、需要什么。
-
-### 每次改动后提交并推送
-
-Skill 仓库（`~/.claude/skills/`）受 git 管理。每次创建新 skill 或修改现有 skill 后，**必须及时提交并推送**：
-
-```bash
-cd ~/.claude/skills
-git add <changed-files>
-git commit -m "类型: 改动描述"
-git push
-```
-
-不要在积累多次改动后一次性提交。每次改动完成一个逻辑单元就提交，保持提交粒度清晰。
 
 ### 迭代循环
 
