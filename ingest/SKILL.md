@@ -266,7 +266,7 @@ last_updated: YYYY-MM-DD
 运行 lint 脚本确认本次变更未引入新问题：
 
 ```
-python3 ~/.claude/skills/lint/scripts/lint.py
+python3 ~/skills/lint/scripts/lint.py
 ```
 
 检查要点：
@@ -461,7 +461,7 @@ mv "raw/03-transcripts/原始文件名.md" "raw/09-archive/{slug}.md"
     - 存在占位符的组件视为不合格，必须先补全再继续
 
     #### d) 运行 lint 脚本验证
-    - `python3 ~/.claude/skills/lint/scripts/lint.py`
+    - `python3 ~/skills/lint/scripts/lint.py`
     - 检查 `code_design` 字段中该仓库的 `passed/total_components` 是否等于 1（全部通过）
     - 如有 `failed > 0`，逐条修复后再继续；如果 `defects` 中有子标题内容为空的组件，必须补写真实内容
 
@@ -519,7 +519,7 @@ opencli bilibili subtitle <BV号> --window background --site-session ephemeral -
 3. 如果正文中没有出现旧字符串，改用全文件重写（`skill_view` 读取 → 修改 → `skill_manage(action='edit')` 传入完整新内容）
 
 ### SKILL.md 文件大小
-技能文件过大会影响 Hermes 的技能发现和加载可靠性。位于 `~/.claude/skills/`（通过 `external_dirs` 加载）的技能文件建议保持在 200 行/10KB 以内。超过此规模的技能应考虑：
+技能文件过大会影响 Hermes 的技能发现和加载可靠性。位于 `~/skills/`（通过 `external_dirs` 加载）的技能文件建议保持在 200 行/10KB 以内。超过此规模的技能应考虑：
 - 将详细步骤移至 `references/` 支持文件
 - 拆分职责到多个技能
 - 保留 SKILL.md 核心步骤，外部细节通过 `references/` 引用

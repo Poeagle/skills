@@ -14,7 +14,7 @@ import glob
 import pandas as pd
 from datetime import datetime, timedelta, date
 
-SKILL_DIR = os.path.expanduser("~/.claude/skills/icost-analysis")
+SKILL_DIR = os.path.expanduser("~/skills/icost-analysis")
 DATA_DIR = os.path.expanduser("~/records/finance")
 PROCESSED_LOG = os.path.join(DATA_DIR, "processed.log")
 HOME_COOK_COST = 15  # 自炊一顿 ¥15

@@ -11,7 +11,7 @@ iCost 消费行为模式分析 — 用户问「根据消费能分析出什么模
   6. 工作日 vs 周末对比
 
 Usage:
-    python3 ~/.claude/skills/icost-analysis/scripts/patterns.py [year1 year2 ...]
+    python3 ~/skills/icost-analysis/scripts/patterns.py [year1 year2 ...]
     默认分析所有年份。
 """
 import sys, csv, os

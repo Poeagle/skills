@@ -107,7 +107,7 @@ description: 个人消费预算对比报告系统。基于 iCost 账单对比用
 ## 目录结构
 
 ```
-~/.claude/skills/icost-analysis/
+~/skills/icost-analysis/
 ├── SKILL.md
 ├── references/
 │   └── budget-rules.md    ← 用户预算规则（含历史修订记录）
@@ -144,7 +144,7 @@ description: 个人消费预算对比报告系统。基于 iCost 账单对比用
 
 用户问「去年全年花了多少」「统计一下去年全年」时：
 
-1. 运行 `python3 ~/.claude/skills/icost-analysis/scripts/yearly.py [年份]`
+1. 运行 `python3 ~/skills/icost-analysis/scripts/yearly.py [年份]`
 2. 输出包含：全年总支出 · 一级分类拆解 · 每月趋势（含条形图） · 外食/零食/订阅独立统计 · 大额支出明细（≥¥300）
 3. 注意区分一次性大件（MacBook、耳机等）和日常支出——去掉大件后算月均实用参考
 
@@ -152,7 +152,7 @@ description: 个人消费预算对比报告系统。基于 iCost 账单对比用
 
 用户问「根据消费能分析出什么模式」「消费有什么规律」「从数据能看到什么」时：
 
-1. 运行 `python3 ~/.claude/skills/icost-analysis/scripts/patterns.py [年份1 年份2 ...]`
+1. 运行 `python3 ~/skills/icost-analysis/scripts/patterns.py [年份1 年份2 ...]`
 2. 默认分析 2024+2025+2026 三年，也可指定年份
 3. 输出维度：
    - 按星期拆解（周几花最多，工作日 vs 周末倍数）
@@ -172,13 +172,13 @@ description: 个人消费预算对比报告系统。基于 iCost 账单对比用
 用户上传/在目录放入了新 xlsx 文件，要求立即处理时：
 
 1. **扫描** — `ls ~/records/finance/*.xlsx` 检查是否有新 xlsx
-2. **摄入** — `python3 ~/.claude/skills/icost-analysis/scripts/ingest.py --file <路径>`
+2. **摄入** — `python3 ~/skills/icost-analysis/scripts/ingest.py --file <路径>`
    - 自动去重追加到年度 csv
    - 自动写入 processed.log
    - 自动删除原始 xlsx
 3. **重复扫描** — 用户可能分批导出（先导一部分，再导另一部分）。扫完第一个文件后再次 `ls ~/records/finance/*.xlsx` 检查是否有第二个。每个文件独立执行一次 ingest.py。因为去重按「日期+金额+分类+备注」四字段联合判断，重复数据不会重复追加。
 4. **验证** — 检查新数据：`grep "日期" ~/records/finance/2026.csv | tail -N`
-5. **出报告** — `python3 ~/.claude/skills/icost-analysis/scripts/report.py`
+5. **出报告** — `python3 ~/skills/icost-analysis/scripts/report.py`
 6. **推送** — 报告直接呈现在对话中（已推送到 QQ）
 
 ⚠️ **分批导出场景**：用户可能先导出几天数据（xlsx 1），过几分钟又导出补充数据（xlsx 2）。两个文件可能有部分日期重叠。ingest.py 的去重按「日期+金额+分类+备注」四字段联合判断，能正确处理这种情况。处理完所有 xlsx 后再统一出报告——分批导入但一次报告。
@@ -190,7 +190,7 @@ description: 个人消费预算对比报告系统。基于 iCost 账单对比用
 ⚠️ **脚本修复后必做：** 用户说"即刻修复"时，修完先不要报告结果——
    1. 造测试 xlsx → 跑 ingest.py 验证全流程（数据摄入✅ · processed.log写入✅ · 原文件删除✅）
    2. 清理测试数据
-   3. `cd ~/.claude/skills && git add/commit/push` — 推送到远程 skills 仓库（"推送"=git push，不是发消息）
+   3. `cd ~/skills && git add/commit/push` — 推送到远程 skills 仓库（"推送"=git push，不是发消息）
    4. 在对话中告知完成
    **用户原话：** "修复完测试一下，测试通过了要推送" — 这里"推送"=git push 到远程仓库
    ❌ 踩坑：上次修完 ingest.py 后，我把"推送"误解为发 QQ 消息 → 被纠正"我是说推送到远程skills仓库"

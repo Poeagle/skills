@@ -3,7 +3,7 @@
 iCost 年度分析 — 全年消费总览、分类拆解、月度趋势、节省潜力计算。
 
 Usage:
-    python3 ~/.claude/skills/icost-analysis/scripts/yearly.py [year]
+    python3 ~/skills/icost-analysis/scripts/yearly.py [year]
 
 默认当前年份。结果打印到终端。
 """

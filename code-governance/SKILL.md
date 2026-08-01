@@ -249,7 +249,7 @@ assets/scripts/
 ## 文件清单
 
 ```
-~/.claude/skills/code-governance/
+~/skills/code-governance/
 ├── SKILL.md                         主技能文件
 ├── references/
 │   ├── governance-framework.md      语言无关治理框架标准

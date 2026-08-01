@@ -46,7 +46,7 @@ Skill creator 可能被各种技术背景的人使用。你可能还不知道（
 
 ### Git 工作流要求（硬性规则）
 
-在 `~/.claude/skills/` 仓库中工作的所有 skill 操作，**必须遵守以下流程**：
+在 `~/skills/` 仓库中工作的所有 skill 操作，**必须遵守以下流程**：
 
 1. **Skill 创建/编辑 → 立即提交并推送**
    - 每次创建新 skill 或修改现有 skill 后，作为一个逻辑单元提交
@@ -55,7 +55,7 @@ Skill creator 可能被各种技术背景的人使用。你可能还不知道（
 
 2. **执行命令：**
    ```bash
-   cd ~/.claude/skills
+   cd ~/skills
    git add <changed-files>
    git commit -m "类型: 改动描述"   # 类型: feat/fix/refactor/docs/chore/test
    git push
@@ -64,7 +64,7 @@ Skill creator 可能被各种技术背景的人使用。你可能还不知道（
 3. **每次 iteration（测试迭代）结束后，如果 skill 有改动，也必须提交并推送。** 不要在"等最终版本完成"后才一次性提交——中间版本也要及时同步。
 
 **技能目录约定：**
-- 开发中的新技能放在 `~/.claude/skills/<name>/SKILL.md`
+- 开发中的新技能放在 `~/skills/<name>/SKILL.md`
 - 不要放在 `~/.hermes/skills/` 下——那里是 Hermes 内建技能的位置，不受 git 管理
 - 本仓库的 origin 是 `git@github.com:Poeagle/skills.git`
 

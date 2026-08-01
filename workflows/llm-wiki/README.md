@@ -42,7 +42,7 @@
 
 ```bash
 # 1. 复制工作流模板到新项目
-cp -r ~/.claude/skills/workflows/llm-wiki /path/to/my-wiki
+cp -r ~/skills/workflows/llm-wiki /path/to/my-wiki
 cd /path/to/my-wiki
 
 # 2. 用 Obsidian 打开该目录作为 vault

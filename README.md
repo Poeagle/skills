@@ -1,9 +1,9 @@
 # Skills & Workflows
 
-Claude Code / Claw Code 技能与工作流集合，托管在 `~/.claude/skills/`。
+Claude Code / Claw Code 技能与工作流集合，托管在 `~/skills/`。
 
 ```bash
-git clone git@github.com:Poeagle/skills.git ~/.claude/skills
+git clone git@github.com:Poeagle/skills.git ~/skills
 ```
 
 ## 工作流
@@ -38,12 +38,12 @@ git clone git@github.com:Poeagle/skills.git ~/.claude/skills
 
 ```bash
 # 新增 skill
-mkdir -p ~/.claude/skills/<name>
+mkdir -p ~/skills/<name>
 # 创建 SKILL.md
 # git add && git commit && git push
 
 # 删除 skill
-rm -rf ~/.claude/skills/<name>
+rm -rf ~/skills/<name>
 # git add && git commit && git push
 ```
 
