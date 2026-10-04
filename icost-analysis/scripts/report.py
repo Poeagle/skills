@@ -126,6 +126,28 @@ def generate_report() -> str:
     lw_end = today - timedelta(days=today.weekday() + 1)
     lw_start = lw_end - timedelta(days=6)
 
+    # ── 数据陈旧守卫 ──
+    # 若最后一条记录早于上周开始，说明账单没导入，任何“省¥X”都是假象（实际是¥0支出）。
+    # 必须显式报警，不能输出误导性的“省¥125”。
+    last_date = df["日期_dt"].max().date()
+    stale = last_date < lw_start.date()
+    if stale:
+        gap = (me - last_date).days
+        S = "\n" + "─" * 20
+        lines = [
+            "📋 消费周报",
+            "",
+            "⚠️ 数据缺失，无法生成报告",
+            f"最后一条记录：{last_date.strftime('%Y/%m/%d')}（距今 {gap} 天）",
+            f"上周（{lw_start.month}/{lw_start.day}-{lw_end.month}/{lw_end.day}）无任何数据",
+            "",
+            "下面的数字全是 ¥0，不代表你省钱了——",
+            "只是账单没导入。请从 iCost 导出增量 xlsx 放到",
+            "~/records/finance/ 后重跑。",
+            f"{S}",
+            "📌 资产更新了没？",
+        ]
+        return "\n".join(lines)
     month_df = df[(df["日期_dt"] >= pd.Timestamp(ms)) & (df["日期_dt"] <= pd.Timestamp(me))].copy()
     week_df = df[(df["日期_dt"] >= pd.Timestamp(lw_start)) & (df["日期_dt"] <= pd.Timestamp(lw_end))].copy()
 
